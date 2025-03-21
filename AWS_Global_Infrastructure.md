@@ -59,7 +59,7 @@ Each Availability Zone in a Region connects to the internet through two transit 
 
 These features strongly isolate Availability Zones from each other, which we refer to as **Availability Zone Independence (AZI)**. The following figure depicts the logical construct of Availability Zones and their connectivity to the Internet.
 
-![This image shows how Availability Zones consist of one or more physical data centers that are redundantly connected to each other and the internet](../images/availability-zones.png "Title")
+![This image shows how Availability Zones consist of one or more physical data centers that are redundantly connected to each other and the internet](./images/availability-zones.png "Title")
 
 ## Regions
 
