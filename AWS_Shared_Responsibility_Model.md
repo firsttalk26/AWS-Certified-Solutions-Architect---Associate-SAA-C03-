@@ -6,7 +6,7 @@ Compliance and security practices are shared between AWS and customers. Which en
 
 **Customer Responsibility:** The AWS customer decides the services and zones to deploy resources, configures the services, and manages the IAM configuration to secure the cloud resources. The security configuration should also be managed to control access. 
 
-![][image1]
+![AWS_Shared_Responsibility_Model](./images/Shared_Responsibility_Model.jpg)
 
 ### Below are examples of controls that are managed by AWS, AWS Customers, and/or both.
 
