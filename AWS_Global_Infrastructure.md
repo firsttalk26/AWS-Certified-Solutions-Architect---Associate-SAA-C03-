@@ -141,7 +141,7 @@ Outpost servers provide local computing and networking services.
 
 In addition to the AWS Regions and Availability Zones, AWS also operates a globally distributed **point of presence (PoP) network**. These **PoPs host Amazon CloudFront**, *a content delivery network (CDN); Amazon Route 53, a public Domain Name System (DNS) resolution service; and AWS Global Accelerator (AGA), an edge networking optimization service*. The global edge network currently consists of over 410 PoPs, including more than 400 Edge Locations, and 13 regional mid-tier caches in over 90 cities across 48 countries (current status can be found here: [Amazon CloudFront Key Features](https://aws.amazon.com/cloudfront/features/)).
 
-![This image shows the Amazon CloudFront global edge network][image2]  
+![This image shows the Amazon CloudFront global edge network](./images/amazon-cloudfront.png) 
 *Amazon CloudFront global edge network*
 
 Each PoP is isolated from the others, which means a failure affecting a single PoP or metropolitan area does not impact the rest of the global network. 
@@ -172,7 +172,7 @@ This backbone is comprised of multiple 400GbE parallel fibers across the globe a
 
 **CloudFront embedded Points of Presence** are situated within internet service provider (ISP) networks, closest to end viewers. In addition to CloudFront POPs, there are 900+ embedded POPs across 300+ cities in North America, Europe, and Asia.
 
-![][image3]
+![AWS Global Edge Network](./images/AWS_Edge_Network.png)
 
 ## Partitions
 
