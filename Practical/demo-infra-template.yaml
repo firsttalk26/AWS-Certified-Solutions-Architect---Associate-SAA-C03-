@@ -1,0 +1,102 @@
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.162.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: stack
+          Value: demo
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZoneId: use1-az1
+      CidrBlock: 172.162.1.0/24
+      MapPublicIpOnLaunch: false
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: true
+      Tags:
+        - Key: stack
+          Value: demo
+      VpcId: !Ref VPC
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZoneId: use1-az2
+      CidrBlock: 172.162.2.0/24
+      MapPublicIpOnLaunch: false
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: true
+      Tags:
+        - Key: stack
+          Value: demo
+      VpcId: !Ref VPC
+  Subnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZoneId: use1-az3
+      CidrBlock: 172.162.3.0/24
+      MapPublicIpOnLaunch: false
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: true
+      Tags:
+        - Key: stack
+          Value: demo
+      VpcId: !Ref VPC
+  Subnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZoneId: use1-az1
+      CidrBlock: 172.162.4.0/24
+      MapPublicIpOnLaunch: true
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: true
+      Tags:
+        - Key: stack
+          Value: demo
+      VpcId: !Ref VPC
+  Subnet5:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZoneId: use1-az2
+      CidrBlock: 172.162.5.0/24
+      MapPublicIpOnLaunch: true
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: true
+      Tags:
+        - Key: stack
+          Value: demo
+      VpcId: !Ref VPC
+  Subnet6:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZoneId: use1-az3
+      CidrBlock: 172.162.6.0/24
+      MapPublicIpOnLaunch: true
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: true
+      Tags:
+        - Key: stack
+          Value: demo
+      VpcId: !Ref VPC
+Metadata:
+  AWS::Composer::Groups:
+    Group2:
+      Label: Group1
+      Members:
+        - VPC
+        - Group
+        - Group3
+    Group:
+      Label: Group
+      Members:
+        - Subnet
+        - Subnet2
+        - Subnet3
+    Group3:
+      Label: Group3
+      Members:
+        - Subnet4
+        - Subnet6
+        - Subnet5
