@@ -1,0 +1,47 @@
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: vpc-0af67fef4d42f2208
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  EC2InstanceLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-084568db4383264d4
+        InstanceType: t2.micro
+        BlockDeviceMappings:
+          - Ebs:
+              VolumeSize: 22
+              VolumeType: gp2
+              DeleteOnTermination: true
+              Encrypted: true
+            DeviceName: /dev/sda1
+        MetadataOptions:
+          InstanceMetadataTags: enabled
+        NetworkInterfaces:
+          - SubnetId: subnet-02e2198db761f4621
+        SecurityGroupIds:
+          - !Ref InstanceSecurityGroup
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: department
+                Value: dev
+      LaunchTemplateName: Bastion-Instance-Template
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Stack
+              Value: demo
