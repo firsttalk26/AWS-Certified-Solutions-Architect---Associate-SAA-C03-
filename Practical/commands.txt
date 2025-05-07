@@ -1,0 +1,29 @@
+#########CloudFormation##############
+
+
+aws cloudformation create-stack --stack-name myteststack --template-body file://demo-infra-template.yaml  --profile simplilearn 
+
+
+{
+    "StackId": "arn:aws:cloudformation:us-east-1:600330284614:stack/myteststack/f7ddf6e0-29af-11f0-adf4-0affcdc83055"
+}
+
+
+
+aws cloudformation delete-stack --stack-name myteststack --profile simplilearn
+
+
+
+
+aws cloudformation create-stack --stack-name demo-infra-stack --template-body file://demo-infra-template.yaml  --profile simplilearn
+
+
+aws cloudformation describe-stack-events \
+--stack-name demo-infra-stack \
+--profile simplilearn \
+--max-items 2
+
+
+
+
+

@@ -1,3 +1,6 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: VPC with 3 public and 3 private subnets, NAT and IGW
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -6,97 +9,168 @@ Resources:
       EnableDnsHostnames: true
       EnableDnsSupport: true
       Tags:
-        - Key: stack
-          Value: demo
-  Subnet:
+        - Key: Name
+          Value: demo-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: demo-igw
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZoneId: use1-az1
+      VpcId: !Ref VPC
       CidrBlock: 172.162.1.0/24
-      MapPublicIpOnLaunch: false
-      PrivateDnsNameOptionsOnLaunch:
-        EnableResourceNameDnsARecord: true
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
       Tags:
-        - Key: stack
-          Value: demo
-      VpcId: !Ref VPC
-  Subnet2:
+        - Key: Name
+          Value: public-subnet-1
+
+  PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZoneId: use1-az2
+      VpcId: !Ref VPC
       CidrBlock: 172.162.2.0/24
-      MapPublicIpOnLaunch: false
-      PrivateDnsNameOptionsOnLaunch:
-        EnableResourceNameDnsARecord: true
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: true
       Tags:
-        - Key: stack
-          Value: demo
-      VpcId: !Ref VPC
-  Subnet3:
+        - Key: Name
+          Value: public-subnet-2
+
+  PublicSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZoneId: use1-az3
+      VpcId: !Ref VPC
       CidrBlock: 172.162.3.0/24
+      AvailabilityZone: us-east-1c
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: public-subnet-3
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.162.11.0/24
+      AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: false
-      PrivateDnsNameOptionsOnLaunch:
-        EnableResourceNameDnsARecord: true
       Tags:
-        - Key: stack
-          Value: demo
-      VpcId: !Ref VPC
-  Subnet4:
+        - Key: Name
+          Value: private-subnet-1
+
+  PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZoneId: use1-az1
-      CidrBlock: 172.162.4.0/24
-      MapPublicIpOnLaunch: true
-      PrivateDnsNameOptionsOnLaunch:
-        EnableResourceNameDnsARecord: true
-      Tags:
-        - Key: stack
-          Value: demo
       VpcId: !Ref VPC
-  Subnet5:
+      CidrBlock: 172.162.12.0/24
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: private-subnet-2
+
+  PrivateSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZoneId: use1-az2
-      CidrBlock: 172.162.5.0/24
-      MapPublicIpOnLaunch: true
-      PrivateDnsNameOptionsOnLaunch:
-        EnableResourceNameDnsARecord: true
-      Tags:
-        - Key: stack
-          Value: demo
       VpcId: !Ref VPC
-  Subnet6:
-    Type: AWS::EC2::Subnet
+      CidrBlock: 172.162.13.0/24
+      AvailabilityZone: us-east-1c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: private-subnet-3
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
     Properties:
-      AvailabilityZoneId: use1-az3
-      CidrBlock: 172.162.6.0/24
-      MapPublicIpOnLaunch: true
-      PrivateDnsNameOptionsOnLaunch:
-        EnableResourceNameDnsARecord: true
-      Tags:
-        - Key: stack
-          Value: demo
       VpcId: !Ref VPC
-Metadata:
-  AWS::Composer::Groups:
-    Group2:
-      Label: Group1
-      Members:
-        - VPC
-        - Group
-        - Group3
-    Group:
-      Label: Group
-      Members:
-        - Subnet
-        - Subnet2
-        - Subnet3
-    Group3:
-      Label: Group3
-      Members:
-        - Subnet4
-        - Subnet6
-        - Subnet5
+      Tags:
+        - Key: Name
+          Value: public-rt
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: IGWAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssoc3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicRouteTable
+
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    DependsOn: IGWAttachment
+    Properties:
+      Domain: vpc
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    DependsOn: IGWAttachment
+    Properties:
+      AllocationId: !GetAtt ElasticIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: demo-nat
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: private-rt
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  PrivateSubnetRouteTableAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetRouteTableAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetRouteTableAssoc3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet3
+      RouteTableId: !Ref PrivateRouteTable
+
