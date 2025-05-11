@@ -1,13 +1,27 @@
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+
 Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow http to client host
-      VpcId: vpc-0af67fef4d42f2208
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 81
+          ToPort: 81
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: tcp
@@ -31,9 +45,12 @@ Resources:
         MetadataOptions:
           InstanceMetadataTags: enabled
         NetworkInterfaces:
-          - SubnetId: subnet-02e2198db761f4621
-        SecurityGroupIds:
-          - !Ref InstanceSecurityGroup
+          - DeviceIndex: 0
+            SubnetId: !ImportValue
+              Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+            AssociatePublicIpAddress: true
+            Groups:
+              - !Ref InstanceSecurityGroup
         TagSpecifications:
           - ResourceType: instance
             Tags:
@@ -45,3 +62,21 @@ Resources:
           Tags:
             - Key: Stack
               Value: demo
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install nginx -y
+          systemctl start nginx
+          systemctl enable nginx
+          echo "Hi from stack" > /home/ubuntu/info.txt
+      Tags:
+        - Key: Name
+          Value: BastionVM
