@@ -4,6 +4,15 @@ Parameters:
     Default: networkStack
 
 Resources:
+  BastionElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  BastionEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt BastionElasticIP.AllocationId
+      InstanceId: !Ref BastionInstance
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -24,10 +33,8 @@ Resources:
           ToPort: 81
           CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
+        - IpProtocol: "-1"
+          CidrIp: "0.0.0.0/0"
 
   EC2InstanceLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -73,10 +80,26 @@ Resources:
         Fn::Sub: |
           #!/bin/bash
           apt-get update -y
-          apt-get install nginx -y
-          systemctl start nginx
-          systemctl enable nginx
-          echo "Hi from stack" > /home/ubuntu/info.txt
+          apt install apache2 -y
+          systemctl enable apache2
+          systemctl start apache2
+          echo '''<?php
+          phpinfo();
+          ?>''' > test
+          cd /tmp && wget https://wordpress.org/latest.tar.gz
+          tar -xvf latest.tar.gz
+          cp -R wordpress /var/www/html/
+          cp -R wordpress /var/www/html/
+          chown -R www-data:www-data /var/www/html/wordpress/
+          chmod -R 755 /var/www/html/wordpress/
+          sudo mkdir /var/www/html/wordpress/wp-content/uploads
+          chown -R www-data:www-data /var/www/html/wordpress/wp-content/uploads/
       Tags:
         - Key: Name
           Value: BastionVM
+Outputs:
+  StackBastion:
+    Description: The ID of the Bastion VM
+    Value: !Ref BastionInstance
+    Export:
+      Name: !Sub ${AWS::StackName}-BastionInstanceID

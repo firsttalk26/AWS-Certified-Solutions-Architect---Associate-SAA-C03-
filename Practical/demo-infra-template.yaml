@@ -173,5 +173,44 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet3
       RouteTableId: !Ref PrivateRouteTable
+      
+Outputs:
+  StackVPC:
+    Description: The ID of the VPC
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCID"
+  StackPublicSubnet1:
+    Description: The ID of the PublicSubnet1
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet1ID"
+  StackPublicSubnet2:
+    Description: The ID of the PublicSubnet2
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet2ID"
+  StackPublicSubnet3:
+    Description: The ID of the PublicSubnet3
+    Value: !Ref PublicSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-PublicSubnet3ID"
+  StackPrivateSubnet1:
+    Description: The ID of the PrivateSubnet1
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet1ID"
+  StackPrivateSubnet2:
+    Description: The ID of the PrivateSubnet2
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet2ID"
+  StackPrivateSubnet3:
+    Description: The ID of the PrivateSubnet3
+    Value: !Ref PrivateSubnet3
+    Export:
+      Name: !Sub "${AWS::StackName}-PrivateSubnet3ID"
+
+
 
 

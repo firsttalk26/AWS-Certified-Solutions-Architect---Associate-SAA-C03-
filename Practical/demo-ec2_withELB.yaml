@@ -1,0 +1,136 @@
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for backend Instance
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+
+  EC2InstanceLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-04db3b3e508d1b218
+        InstanceType: t2.micro
+        BlockDeviceMappings:
+          - Ebs:
+              VolumeSize: 22
+              VolumeType: gp2
+              DeleteOnTermination: true
+              Encrypted: true
+            DeviceName: /dev/sda1
+        MetadataOptions:
+          InstanceMetadataTags: enabled
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: department
+                Value: dev
+      LaunchTemplateName: Backend-Instance-Template
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Stack
+              Value: demo
+
+  BackendInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PrivateSubnet1ID
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install nginx -y
+          systemctl start nginx
+          systemctl enable nginx
+          echo "Hi from stack" > /home/ubuntu/info.txt
+          echo "Live on server `hostname`" > /var/www/html/index.nginx-debian.html
+          systemctl restart nginx
+      Tags:
+        - Key: Name
+          Value: BackendInstance1
+
+  BackendInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PrivateSubnet2ID
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install nginx -y
+          systemctl start nginx
+          systemctl enable nginx
+          echo "Hi from stack" > /home/ubuntu/info.txt
+          echo "Live on server `hostname`" > /var/www/html/index.nginx-debian.html
+          systemctl restart nginx
+      Tags:
+        - Key: Name
+          Value: BackendInstance2
+
+  BackendInstance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PrivateSubnet3ID
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install nginx -y
+          systemctl start nginx
+          systemctl enable nginx
+          echo "Hi from stack" > /home/ubuntu/info.txt
+          echo "Live on server `hostname`" > /var/www/html/index.nginx-debian.html
+          systemctl restart nginx
+      Tags:
+        - Key: Name
+          Value: BackendInstance3
+
+Outputs:
+  BackendInstance1:
+    Description: The ID of the BackendInstance1
+    Value: !Ref BackendInstance1
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendInstance1ID
+  BackendInstance2:
+    Description: The ID of the BackendInstance2
+    Value: !Ref BackendInstance2
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendInstance2ID
+  BackendInstance3:
+    Description: The ID of the BackendInstance3
+    Value: !Ref BackendInstance3
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendInstance3ID
+  BackendSecurityGroup:
+    Description: The ID of the InstanceSecurityGroup
+    Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendSecurityGroupID
