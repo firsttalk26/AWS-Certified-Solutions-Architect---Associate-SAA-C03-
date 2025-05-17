@@ -1,0 +1,94 @@
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  DBRootPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  DBName:
+    Type: String
+    Default: wordpress
+  DBUser:
+    Type: String
+    Default: wpuser
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+
+Resources:
+  MySQLSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP, SSH and MySQL
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !ImportValue
+            Fn::Sub: ${NetworkStackName}-VPCcidr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  MySQLInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-084568db4383264d4
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+      SecurityGroupIds:
+        - !Ref MySQLSecurityGroup
+      Tags:
+        - Key: Name
+          Value: DockerMySQL
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
+          apt-get update -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create mysql-net
+          echo "mysql-net is created" >> /home/ubuntu/user-data.log
+          docker rm mysql-db -f  >> /home/ubuntu/user-data.log
+          echo "docker container mysql-db is deleted" >> /home/ubuntu/user-data.log
+          docker run  --name mysql-db \
+            --network mysql-net \
+            -e MYSQL_ROOT_PASSWORD=${DBRootPassword} \
+            -e MYSQL_DATABASE=${DBName} \
+            -e MYSQL_USER=${DBUser} \
+            -e MYSQL_PASSWORD=${DBPassword} \
+            -p 3306:3306 \
+            -v /var/lib/mysql:/var/lib/mysql \
+            -d mysql:5.7 --bind-address=0.0.0.0
+          echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
+
+Outputs:
+  MySQLPrivateIP:
+    Description: Private IP of the MySQL Instance
+    Value: !GetAtt MySQLInstance.PrivateIp
+    Export:
+      Name: !Sub ${AWS::StackName}-MySQLPrivateIP
+  MySQLSecurityGroupID:
+    Description: Private IP of the MySQL Instance
+    Value: !Ref MySQLSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-MySQLSecurityGroup

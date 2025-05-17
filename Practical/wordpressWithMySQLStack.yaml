@@ -1,0 +1,94 @@
+### CloudFormation Template for WordPress + MySQL using Docker ###
+
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  DBRootPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  DBName:
+    Type: String
+    Default: wordpress
+  DBUser:
+    Type: String
+    Default: wpuser
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+
+Resources:
+  DockerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP, SSH and MySQL
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !ImportValue
+            Fn::Sub: ${NetworkStackName}-VPCcidr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  DockerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-084568db4383264d4
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+      SecurityGroupIds:
+        - !Ref DockerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: DockerWordpressMySQL
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          apt-get update -y
+          apt-get install -y docker.io
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+
+          docker network create wordpress-net
+
+          docker run --name mysql-db \
+            --network wordpress-net \
+            -e MYSQL_ROOT_PASSWORD=${DBRootPassword} \
+            -e MYSQL_DATABASE=${DBName} \
+            -e MYSQL_USER=${DBUser} \
+            -e MYSQL_PASSWORD=${DBPassword} \
+            -v /var/lib/mysql:/var/lib/mysql \
+            -d mysql:5.7
+
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=mysql-db:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -d wordpress
+
+Outputs:
+  WordPressURL:
+    Description: Access your WordPress site here
+    Value: !Sub http://${DockerInstance.PublicIp}
+

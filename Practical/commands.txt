@@ -30,6 +30,17 @@ aws cloudformation continue-update-rollback --stack-name demo-ec2 --region us-we
 
 
 
+aws cloudformation create-stack --stack-name networkStack --template-body file://wordpress-dir/dev/networkStack.yaml  --profile simplilearn
+
+aws ec2 create-key-pair --key-name demo-ssh-key --key-type rsa  --key-format pem --profile simplilearn --query "KeyMaterial" --output text   > demo-ssh-key.pem
+
+chmod 400 demo-ssh-key.pem
+
+aws cloudformation create-stack --stack-name mysqlStack --template-body file://wordpress-dir/dev/mysqlStack.yaml  --profile simplilearn
+
+aws cloudformation create-stack --stack-name wpStack --template-body file://wordpress-dir/dev/wpStack.yaml  --profile simplilearn
+
+
 
 
 

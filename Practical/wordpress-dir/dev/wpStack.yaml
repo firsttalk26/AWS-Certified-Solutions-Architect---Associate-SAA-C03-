@@ -1,0 +1,85 @@
+
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  DBRootPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  DBName:
+    Type: String
+    Default: wordpress
+  DBUser:
+    Type: String
+    Default: wpuser
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  MySQLPrivateIP:
+    Type: String
+    Description: Private IP of the MySQL Server (imported from the MySQL stack output)
+
+Resources:
+  WPSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP, SSH and MySQL
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  DockerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-084568db4383264d4
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+      SecurityGroupIds:
+        - !Ref WPSecurityGroup
+      Tags:
+        - Key: Name
+          Value: DockerWordpress
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
+          apt-get update -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLPrivateIP}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
+
+Outputs:
+  WordPressURL:
+    Description: Access your WordPress site here
+    Value: !Sub http://${DockerInstance.PublicIp}
