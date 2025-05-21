@@ -8,11 +8,11 @@ KEY_FILE="${KEY_NAME}.pem"
 STACK_DIR="wordpress-dir/dev"
 
 echo "🚀 Creating Network Stack..."
-aws cloudformation create-stack \
-  --stack-name networkStack \
-  --template-body file://${STACK_DIR}/networkStack.yaml \
-  --profile ${PROFILE} \
-  --capabilities CAPABILITY_NAMED_IAM
+#aws cloudformation create-stack \
+#  --stack-name networkStack \
+#  --template-body file://${STACK_DIR}/networkStack.yaml \
+#  --profile ${PROFILE} \
+#  --capabilities CAPABILITY_NAMED_IAM
 
 echo "⏳ Waiting for Network Stack to complete..."
 aws cloudformation wait stack-create-complete \

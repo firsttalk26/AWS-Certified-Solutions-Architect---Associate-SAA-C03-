@@ -43,6 +43,13 @@ aws cloudformation create-stack --stack-name wpStack --template-body file://word
 
 
 
+RYIo4jpVCFDfa1hO9gcA
+database-1.cleovku5brpx.us-east-1.rds.amazonaws.com
+
+CREATE USER wpuser@'%' IDENTIFIED BY 'StrongPassword123!';
+GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'%';
+FLUSH PRIVILEGES;
+
 
 
 

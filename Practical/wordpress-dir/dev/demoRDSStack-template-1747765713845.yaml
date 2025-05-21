@@ -1,0 +1,142 @@
+---
+Metadata:
+  AWSToolsMetrics:
+    IaC_Generator: "arn:aws:cloudformation:us-east-1:239159289278:generatedTemplate/8066b32a-028a-444f-95c2-267919f7c8d2"
+Resources:
+  KMSKey:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::KMS::Key"
+    DeletionPolicy: "Retain"
+    Properties:
+      Origin: "AWS_KMS"
+      MultiRegion: false
+      Description: "Default key that protects my RDS database volumes when no other\
+        \ key is defined"
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+        - Condition:
+            StringEquals:
+              kms:ViaService: "rds.us-east-1.amazonaws.com"
+              kms:CallerAccount: "239159289278"
+          Resource: "*"
+          Action:
+          - "kms:Encrypt"
+          - "kms:Decrypt"
+          - "kms:ReEncrypt*"
+          - "kms:GenerateDataKey*"
+          - "kms:CreateGrant"
+          - "kms:ListGrants"
+          - "kms:DescribeKey"
+          Effect: "Allow"
+          Principal:
+            AWS: "*"
+          Sid: "Allow access through RDS for all principals in the account that are\
+            \ authorized to use RDS"
+        - Resource: "*"
+          Action:
+          - "kms:Describe*"
+          - "kms:Get*"
+          - "kms:List*"
+          - "kms:RevokeGrant"
+          Effect: "Allow"
+          Principal:
+            AWS: "arn:aws:iam::239159289278:root"
+          Sid: "Allow direct access to key metadata to the account"
+        Id: "auto-rds-2"
+      KeySpec: "SYMMETRIC_DEFAULT"
+      Enabled: true
+      EnableKeyRotation: true
+      KeyUsage: "ENCRYPT_DECRYPT"
+      Tags: []
+  RDSDBInstance:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::RDS::DBInstance"
+    DeletionPolicy: "Retain"
+    Properties:
+      DatabaseInsightsMode: "standard"
+      StorageEncrypted: true
+      AssociatedRoles: []
+      Port: "3306"
+      ProcessorFeatures: []
+      StorageThroughput: 0
+      PreferredBackupWindow: "04:55-05:25"
+      MonitoringInterval: 0
+      DBParameterGroupName: "default.mysql8.0"
+      NetworkType: "IPV4"
+      DedicatedLogVolume: false
+      CopyTagsToSnapshot: true
+      MultiAZ: false
+      Engine: "mysql"
+      Tags: []
+      EngineLifecycleSupport: "open-source-rds-extended-support-disabled"
+      LicenseModel: "general-public-license"
+      EngineVersion: "8.0.41"
+      StorageType: "gp2"
+      KmsKeyId:
+        Fn::GetAtt:
+        - "KMSKey"
+        - "Arn"
+      DBInstanceClass: "db.t3.micro"
+      AvailabilityZone: "us-east-1a"
+      OptionGroupName: "default:mysql-8-0"
+      PreferredMaintenanceWindow: "mon:07:59-mon:08:29"
+      EnablePerformanceInsights: false
+      AutoMinorVersionUpgrade: true
+      DBSubnetGroupName:
+        Ref: "RDSDBSubnetGroupDefaultvpc0a1dddc72ebb4d959"
+      DeletionProtection: false
+      DBInstanceIdentifier: "database-1"
+      AllocatedStorage: "20"
+      CACertificateIdentifier: "rds-ca-rsa2048-g1"
+      ManageMasterUserPassword: false
+      MasterUserSecret: {}
+      VPCSecurityGroups:
+      - Fn::GetAtt:
+        - "EC2SecurityGroup"
+        - "GroupId"
+      DBSecurityGroups: []
+      MasterUsername: "admin"
+      DBName: "wordpress"
+      EnableIAMDatabaseAuthentication: false
+      MaxAllocatedStorage: 1000
+      BackupRetentionPeriod: 0
+      PubliclyAccessible: false
+      EnableCloudwatchLogsExports:
+      - "audit"
+  EC2SecurityGroup:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SecurityGroup"
+    DeletionPolicy: "Retain"
+    Properties:
+      GroupDescription: "Created by RDS management console"
+      GroupName: "demo-db-SG"
+      VpcId: "vpc-0a1dddc72ebb4d959"
+      SecurityGroupIngress:
+      - CidrIp: "152.58.177.174/32"
+        IpProtocol: "tcp"
+        FromPort: 3306
+        ToPort: 3306
+      - CidrIp: "172.162.0.0/16"
+        IpProtocol: "tcp"
+        FromPort: 3306
+        ToPort: 3306
+      SecurityGroupEgress:
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+  RDSDBSubnetGroupDefaultvpc0a1dddc72ebb4d959:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::RDS::DBSubnetGroup"
+    DeletionPolicy: "Retain"
+    Properties:
+      DBSubnetGroupDescription: "Created from the RDS Management Console"
+      SubnetIds:
+      - "subnet-05c3679f91a72a83f"
+      - "subnet-0d032e561e384b174"
+      - "subnet-06ac06dfccc231cc4"
+      - "subnet-04d28a9c3043e7b6e"
+      - "subnet-080120c0f8a3d29e0"
+      - "subnet-0caf9d8b3a12d485a"
+      DBSubnetGroupName: "default-vpc-0a1dddc72ebb4d959"

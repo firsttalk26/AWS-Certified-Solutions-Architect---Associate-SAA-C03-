@@ -12,7 +12,7 @@ Parameters:
     Default: wordpress
   DBUser:
     Type: String
-    Default: wpuser
+    Default: admin
   DBPassword:
     Type: String
     NoEcho: true
@@ -83,3 +83,4 @@ Outputs:
   WordPressURL:
     Description: Access your WordPress site here
     Value: !Sub http://${DockerInstance.PublicIp}
+

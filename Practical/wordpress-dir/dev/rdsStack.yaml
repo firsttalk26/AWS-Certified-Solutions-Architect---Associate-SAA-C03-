@@ -1,0 +1,149 @@
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  DBRootPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  DBName:
+    Type: String
+    Default: wordpress
+  DBUser:
+    Type: String
+    Default: wpuser
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+
+
+
+Resources:
+  DBSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      CidrBlock: 172.162.4.0/28
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DBSubnet1
+
+  DBSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      CidrBlock: 172.162.4.16/28
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DBSubnet2
+
+  DBSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      CidrBlock: 172.162.4.32/28
+      AvailabilityZone: us-east-1c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DBSubnet3
+
+  DBSubnet4:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      CidrBlock: 172.162.4.48/28
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DBSubnet4
+
+  DBSubnet5:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      CidrBlock: 172.162.4.64/28
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DBSubnet5
+
+  DBSubnet6:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      CidrBlock: 172.162.4.80/28
+      AvailabilityZone: us-east-1c
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: DBSubnet6
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS MySQL instance
+      SubnetIds:
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+        - !Ref DBSubnet3
+        - !Ref DBSubnet4
+        - !Ref DBSubnet5
+        - !Ref DBSubnet6
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS Security Group
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !ImportValue
+            Fn::Sub: ${NetworkStackName}-VPCcidr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  MySQLInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: demo-db
+      Engine: mysql
+      EngineVersion: 8.0.35
+      LicenseModel: general-public-license
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceClass: db.t3.micro
+      AvailabilityZone: us-east-1a
+      BackupRetentionPeriod: 7
+      AllocatedStorage: 20
+      MasterUsername: admin
+      MasterUserPassword: !Ref DBRootPassword
+      DBName: wordpress
+      DBParameterGroupName: default.mysql8.0
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      MultiAZ: false
+      DeletionProtection: false
+
+Outputs:
+  RDSInstanceEndpoint:
+    Description: MySQL RDS Endpoint
+    Value: !GetAtt MySQLInstance.Endpoint.Address
