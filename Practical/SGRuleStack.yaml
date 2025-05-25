@@ -1,7 +1,7 @@
 Parameters:
   BackendStackName:
     Type: String
-    Default: appStack
+    Default: backendStack
   ELBStackName:
     Type: String
     Default: elbStack

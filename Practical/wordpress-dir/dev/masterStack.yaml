@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Master stack to launch VPC, EFS, and WordPress stacks
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: dev
+  MySQLPrivateIP:
+    Type: String
+    Default: 10.0.1.10
+
+Resources:
+
+  networkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/networkStack.yaml
+  efsStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: networkStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/efsStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+
+  rdsStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: networkStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/rdsStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+
+  wpStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - efsStack
+      - rdsStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/wpStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+        EFSStackName: !GetAtt efsStack.Outputs.StackId
+        MySQLPrivateIP: !GetAtt rdsStack.Outputs.RDSInstanceEndpoint
+        EFSFileSystemDNS: !GetAtt efsStack.Outputs.EFSFileSystemDNS
+
+Outputs:
+  NetworkStackOutput:
+    Description: Network Stack ID
+    Value: !Ref networkStack
+
+  EFSStackOutput:
+    Description: EFS Stack ID
+    Value: !Ref efsStack
+
+  WordPressStackOutput:
+    Description: WordPress Stack ID
+    Value: !Ref wpStack

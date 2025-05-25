@@ -51,6 +51,10 @@ GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'%';
 FLUSH PRIVILEGES;
 
 
+mount -t nfs4 -o nfsvers=4.1 ${WordPressEFS}.efs.${AWS::Region}.amazonaws.com:/ /var/www/html
+
+
+
 
 
 

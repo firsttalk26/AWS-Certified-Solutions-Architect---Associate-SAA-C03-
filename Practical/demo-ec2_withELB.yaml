@@ -2,6 +2,28 @@ Parameters:
   NetworkStackName:
     Type: String
     Default: networkStack
+  EFSStackName:
+    Type: String
+    Default: efsStack
+  EFSFileSystemDNS:
+    Type: String
+  DBRootPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  DBName:
+    Type: String
+    Default: wordpress
+  DBUser:
+    Type: String
+    Default: admin
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  MySQLPrivateIP:
+    Type: String
+    Description: Private IP of the MySQL Server (imported from the MySQL stack output)
 
 Resources:
   InstanceSecurityGroup:
@@ -15,7 +37,7 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        ImageId: ami-04db3b3e508d1b218
+        ImageId: ami-07de5dda07dd28430
         InstanceType: t2.micro
         BlockDeviceMappings:
           - Ebs:
@@ -52,13 +74,31 @@ Resources:
       UserData: !Base64
         Fn::Sub: |
           #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
           apt-get update -y
-          apt-get install nginx -y
-          systemctl start nginx
-          systemctl enable nginx
-          echo "Hi from stack" > /home/ubuntu/info.txt
-          echo "Live on server `hostname`" > /var/www/html/index.nginx-debian.html
-          systemctl restart nginx
+          sudo apt install nfs-common -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          mkdir /home/ubuntu/efs
+          mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFSFileSystemDNS}:/ /home/ubuntu/efs
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLPrivateIP}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -v /home/ubuntu/efs:/var/www/html  \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
       Tags:
         - Key: Name
           Value: BackendInstance1
@@ -77,13 +117,31 @@ Resources:
       UserData: !Base64
         Fn::Sub: |
           #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
           apt-get update -y
-          apt-get install nginx -y
-          systemctl start nginx
-          systemctl enable nginx
-          echo "Hi from stack" > /home/ubuntu/info.txt
-          echo "Live on server `hostname`" > /var/www/html/index.nginx-debian.html
-          systemctl restart nginx
+          sudo apt install nfs-common -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          mkdir /home/ubuntu/efs
+          mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFSFileSystemDNS}:/ /home/ubuntu/efs
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLPrivateIP}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -v /home/ubuntu/efs:/var/www/html  \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
       Tags:
         - Key: Name
           Value: BackendInstance2
@@ -102,13 +160,31 @@ Resources:
       UserData: !Base64
         Fn::Sub: |
           #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
           apt-get update -y
-          apt-get install nginx -y
-          systemctl start nginx
-          systemctl enable nginx
-          echo "Hi from stack" > /home/ubuntu/info.txt
-          echo "Live on server `hostname`" > /var/www/html/index.nginx-debian.html
-          systemctl restart nginx
+          sudo apt install nfs-common -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          mkdir /home/ubuntu/efs
+          mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFSFileSystemDNS}:/ /home/ubuntu/efs
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLPrivateIP}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -v /home/ubuntu/efs:/var/www/html  \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
       Tags:
         - Key: Name
           Value: BackendInstance3

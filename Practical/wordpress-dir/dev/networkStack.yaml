@@ -1,11 +1,19 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: VPC with 3 public and 3 private subnets, NAT and IGW
 
+
+
+Parameters:
+  CidrBlock:
+    Type: String
+    Default: 172.162.0.0/16
+
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 172.162.0.0/16
+      CidrBlock: ${CidrBlock}
       EnableDnsHostnames: true
       EnableDnsSupport: true
       Tags:
@@ -175,6 +183,9 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
 
 Outputs:
+  StackId:
+    Description: The ID of the stack
+    Value: !Sub ${AWS::StackName}
   StackVPC:
     Description: The ID of the VPC
     Value: !Ref VPC

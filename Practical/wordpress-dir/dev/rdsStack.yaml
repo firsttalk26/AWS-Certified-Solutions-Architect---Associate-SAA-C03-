@@ -2,7 +2,10 @@ Parameters:
   NetworkStackName:
     Type: String
     Default: networkStack
-  DBRootPassword:
+  DBMasterUser:
+    Type: String
+    Default: admin
+  DBMasterPassword:
     Type: String
     NoEcho: true
     Default: StrongPassword123!
@@ -16,8 +19,6 @@ Parameters:
     Type: String
     NoEcho: true
     Default: StrongPassword123!
-
-
 
 Resources:
   DBSubnet1:
@@ -122,7 +123,6 @@ Resources:
   MySQLInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceIdentifier: demo-db
       Engine: mysql
       EngineVersion: 8.0.35
       LicenseModel: general-public-license
@@ -132,8 +132,8 @@ Resources:
       AvailabilityZone: us-east-1a
       BackupRetentionPeriod: 7
       AllocatedStorage: 20
-      MasterUsername: admin
-      MasterUserPassword: !Ref DBRootPassword
+      MasterUsername: !Ref DBMasterUser
+      MasterUserPassword: !Ref DBMasterPassword
       DBName: wordpress
       DBParameterGroupName: default.mysql8.0
       VPCSecurityGroups:
@@ -147,3 +147,8 @@ Outputs:
   RDSInstanceEndpoint:
     Description: MySQL RDS Endpoint
     Value: !GetAtt MySQLInstance.Endpoint.Address
+  DBSecurityGroupID:
+    Description: MySQL SG
+    Value: !Ref DBSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-MySQLSecurityGroupID

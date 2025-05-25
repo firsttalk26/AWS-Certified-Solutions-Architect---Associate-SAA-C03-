@@ -4,7 +4,7 @@ Parameters:
     Default: networkStack
   BackendStackName:
     Type: String
-    Default: appStack
+    Default: backendStack
 Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
