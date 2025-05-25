@@ -1,4 +1,7 @@
 Parameters:
+  Environment:
+    Type: String
+    Default: demo
   NetworkStackName:
     Type: String
     Default: networkStack
@@ -19,6 +22,26 @@ Parameters:
     Type: String
     NoEcho: true
     Default: StrongPassword123!
+  DBSubnet1CiDR:
+    Type: String
+    Default: 172.162.4.0/28
+  DBSubnet2CiDR:
+    Type: String
+    Default: 172.162.4.16/28
+  DBSubnet3CiDR:
+    Type: String
+    Default: 172.162.4.32/28
+    
+  DBSubnet4CiDR:
+    Type: String
+    Default: 172.162.4.48/28
+  DBSubnet5CiDR:
+    Type: String
+    Default: 172.162.4.64/28
+    
+  DBSubnet6CiDR:
+    Type: String
+    Default: 172.162.4.80/28
 
 Resources:
   DBSubnet1:
@@ -26,72 +49,72 @@ Resources:
     Properties:
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
-      CidrBlock: 172.162.4.0/28
+      CidrBlock: !Ref DBSubnet1CiDR
       AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DBSubnet1
+          Value: !Sub ${Environment}-DBSubnet1
 
   DBSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
-      CidrBlock: 172.162.4.16/28
+      CidrBlock: !Ref DBSubnet2CiDR
       AvailabilityZone: us-east-1b
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DBSubnet2
+          Value: !Sub ${Environment}-DBSubnet2
 
   DBSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
-      CidrBlock: 172.162.4.32/28
+      CidrBlock: !Ref DBSubnet3CiDR
       AvailabilityZone: us-east-1c
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DBSubnet3
+          Value: !Sub ${Environment}-DBSubnet3
 
   DBSubnet4:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
-      CidrBlock: 172.162.4.48/28
+      CidrBlock: !Ref DBSubnet4CiDR
       AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DBSubnet4
+          Value: !Sub ${Environment}-DBSubnet4
 
   DBSubnet5:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
-      CidrBlock: 172.162.4.64/28
+      CidrBlock: !Ref DBSubnet5CiDR
       AvailabilityZone: us-east-1b
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DBSubnet5
+          Value: !Sub ${Environment}-DBSubnet5
 
   DBSubnet6:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
-      CidrBlock: 172.162.4.80/28
+      CidrBlock: !Ref DBSubnet6CiDR
       AvailabilityZone: us-east-1c
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: DBSubnet6
+          Value: !Sub ${Environment}-DBSubnet6
 
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup

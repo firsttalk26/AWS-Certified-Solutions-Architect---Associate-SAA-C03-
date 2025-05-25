@@ -2,6 +2,9 @@ Parameters:
   NetworkStackName:
     Type: String
     Default: networkStack
+  Environment:
+    Type: String
+    Default: demo
 
 Resources:
   EFSSecurityGroup:
@@ -32,7 +35,7 @@ Resources:
         - TransitionToPrimaryStorageClass: AFTER_1_ACCESS
       FileSystemTags:
         - Key: Name
-          Value: DemoFileSystem
+          Value: !Sub ${Environment}-DemoFileSystem
 
   MountTargetResource1:
     Type: AWS::EFS::MountTarget

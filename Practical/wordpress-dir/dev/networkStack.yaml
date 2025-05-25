@@ -7,25 +7,48 @@ Parameters:
   CidrBlock:
     Type: String
     Default: 172.162.0.0/16
+  Environment:
+    Type: String
+    Default: demo
+  PublicSubnet1CiDR:
+    Type: String
+    Default: 172.162.1.0/24
+  PublicSubnet2CiDR:
+    Type: String
+    Default: 172.162.2.0/24
+  PublicSubnet3CiDR:
+    Type: String
+    Default: 172.162.3.0/24
+    
+  PrivateSubnet1CiDR:
+    Type: String
+    Default: 172.162.11.0/24
+  PrivateSubnet2CiDR:
+    Type: String
+    Default: 172.162.12.0/24
+    
+  PrivateSubnet3CiDR:
+    Type: String
+    Default: 172.162.13.0/24
 
 
 Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: ${CidrBlock}
+      CidrBlock: !Ref CidrBlock
       EnableDnsHostnames: true
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: demo-vpc
+          Value: !Sub ${Environment}-vpc
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: demo-igw
+          Value: !Sub ${Environment}-igw
 
   IGWAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -37,67 +60,67 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 172.162.1.0/24
+      CidrBlock: !Ref PublicSubnet1CiDR
       AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: public-subnet-1
+          Value: !Sub ${Environment}-public-subnet-1
 
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 172.162.2.0/24
+      CidrBlock: !Ref PublicSubnet2CiDR
       AvailabilityZone: us-east-1b
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: public-subnet-2
+          Value: !Sub ${Environment}-public-subnet-2
 
   PublicSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 172.162.3.0/24
+      CidrBlock: !Ref PublicSubnet3CiDR
       AvailabilityZone: us-east-1c
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: public-subnet-3
+          Value: !Sub ${Environment}-public-subnet-3
 
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 172.162.11.0/24
+      CidrBlock: !Ref PrivateSubnet1CiDR
       AvailabilityZone: us-east-1a
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: private-subnet-1
+          Value: !Sub ${Environment}-private-subnet-1
 
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 172.162.12.0/24
+      CidrBlock: !Ref PrivateSubnet2CiDR
       AvailabilityZone: us-east-1b
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: private-subnet-2
+          Value: !Sub ${Environment}-private-subnet-2
 
   PrivateSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      CidrBlock: 172.162.13.0/24
+      CidrBlock: !Ref PrivateSubnet3CiDR
       AvailabilityZone: us-east-1c
       MapPublicIpOnLaunch: false
       Tags:
         - Key: Name
-          Value: private-subnet-3
+          Value: !Sub ${Environment}-private-subnet-3
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -105,7 +128,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: public-rt
+          Value: !Sub ${Environment}-public-rt
 
   PublicRoute:
     Type: AWS::EC2::Route
@@ -147,7 +170,7 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       Tags:
         - Key: Name
-          Value: demo-nat
+          Value: !Sub ${Environment}-demo-nat
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -155,7 +178,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: private-rt
+          Value: !Sub ${Environment}-private-rt
 
   PrivateRoute:
     Type: AWS::EC2::Route
