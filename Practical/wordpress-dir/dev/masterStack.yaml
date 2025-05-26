@@ -44,8 +44,7 @@ Resources:
       TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/wpStack.yaml
       Parameters:
         NetworkStackName: !GetAtt networkStack.Outputs.StackId
-        EFSStackName: !GetAtt efsStack.Outputs.StackId
-        MySQLPrivateIP: !GetAtt rdsStack.Outputs.RDSInstanceEndpoint
+        MySQLHost: !GetAtt rdsStack.Outputs.RDSInstanceEndpoint
         EFSFileSystemDNS: !GetAtt efsStack.Outputs.EFSFileSystemDNS
 
 Outputs:

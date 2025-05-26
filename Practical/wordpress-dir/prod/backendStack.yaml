@@ -1,0 +1,211 @@
+Parameters:
+  Environment:
+    Type: String
+    Default: demo
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  EFSFileSystemDNS:
+    Type: String
+  DBName:
+    Type: String
+    Default: wordpress
+  DBUser:
+    Type: String
+    Default: admin
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: StrongPassword123!
+  MySQLHost:
+    Type: String
+    Description: Private IP of the MySQL Server (imported from the MySQL stack output)
+
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for backend Instance
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+
+  EC2InstanceLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-07de5dda07dd28430
+        InstanceType: t2.micro
+        BlockDeviceMappings:
+          - Ebs:
+              VolumeSize: 22
+              VolumeType: gp2
+              DeleteOnTermination: true
+              Encrypted: true
+            DeviceName: /dev/sda1
+        MetadataOptions:
+          InstanceMetadataTags: enabled
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: department
+                Value: dev
+      LaunchTemplateName: Backend-Instance-Template
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Stack
+              Value: demo
+
+  BackendInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PrivateSubnet1ID
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
+          apt-get update -y
+          sudo apt install nfs-common -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          mkdir /home/ubuntu/efs
+          mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFSFileSystemDNS}:/ /home/ubuntu/efs
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLHost}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -v /home/ubuntu/efs:/var/www/html  \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
+      Tags:
+        - Key: Name
+          Value: BackendInstance1
+
+  BackendInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PrivateSubnet2ID
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
+          apt-get update -y
+          sudo apt install nfs-common -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          mkdir /home/ubuntu/efs
+          mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFSFileSystemDNS}:/ /home/ubuntu/efs
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLHost}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -v /home/ubuntu/efs:/var/www/html  \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
+      Tags:
+        - Key: Name
+          Value: BackendInstance2
+
+  BackendInstance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: demo-ssh-key
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PrivateSubnet3ID
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash
+          exec > /var/log/user-data.log 2>&1
+          echo "started script on `date`" > /home/ubuntu/user-data.log
+          apt-get update -y
+          sudo apt install nfs-common -y
+          apt-get install -y docker.io
+          echo "docker is installed" >> /home/ubuntu/user-data.log
+          mkdir /home/ubuntu/efs
+          mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport ${EFSFileSystemDNS}:/ /home/ubuntu/efs
+          systemctl enable docker
+          systemctl start docker
+          usermod -aG docker ubuntu
+          docker network create wordpress-net
+          echo "wordpress-net is created" >> /home/ubuntu/user-data.log
+          docker rm wordpress -f
+          echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
+          docker run --name wordpress \
+            --network wordpress-net \
+            -e WORDPRESS_DB_HOST=${MySQLHost}:3306 \
+            -e WORDPRESS_DB_NAME=${DBName} \
+            -e WORDPRESS_DB_USER=${DBUser} \
+            -e WORDPRESS_DB_PASSWORD=${DBPassword} \
+            -p 80:80 \
+            -v /home/ubuntu/efs:/var/www/html  \
+            -d wordpress
+            echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
+      Tags:
+        - Key: Name
+          Value: BackendInstance3
+
+Outputs:
+  StackId:
+    Description: The id of stack
+    Value: !Sub ${AWS::StackName}
+  BackendInstance1:
+    Description: The ID of the BackendInstance1
+    Value: !Ref BackendInstance1
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendInstance1ID
+  BackendInstance2:
+    Description: The ID of the BackendInstance2
+    Value: !Ref BackendInstance2
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendInstance2ID
+  BackendInstance3:
+    Description: The ID of the BackendInstance3
+    Value: !Ref BackendInstance3
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendInstance3ID
+  BackendSecurityGroup:
+    Description: The ID of the InstanceSecurityGroup
+    Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-BackendSecurityGroupID

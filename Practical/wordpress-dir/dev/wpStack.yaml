@@ -1,17 +1,19 @@
 
 Parameters:
+  Environment:
+    Type: String
+    Default: demo
   NetworkStackName:
     Type: String
     Default: networkStack
-  EFSStackName:
-    Type: String
-    Default: efsStack
   EFSFileSystemDNS:
     Type: String
-  DBRootPassword:
+  InstanceAMI:
     Type: String
-    NoEcho: true
-    Default: StrongPassword123!
+    Default: ami-084568db4383264d4
+  SSHKeyName:
+    Type: String
+    Default: demo-ssh-key
   DBName:
     Type: String
     Default: wordpress
@@ -22,7 +24,7 @@ Parameters:
     Type: String
     NoEcho: true
     Default: StrongPassword123!
-  MySQLPrivateIP:
+  MySQLHost:
     Type: String
     Description: Private IP of the MySQL Server (imported from the MySQL stack output)
 
@@ -45,20 +47,23 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-Wordpress-SG
 
-  DockerInstance:
+  WordpressInstance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      ImageId: ami-084568db4383264d4
-      KeyName: demo-ssh-key
+      ImageId: !Ref InstanceAMI
+      KeyName: !Ref SSHKeyName
       SubnetId: !ImportValue
         Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
       SecurityGroupIds:
         - !Ref WPSecurityGroup
       Tags:
         - Key: Name
-          Value: DockerWordpress
+          Value: !Sub ${Environment}-Wordpress
       UserData: !Base64
         Fn::Sub: |
           #!/bin/bash
@@ -79,7 +84,7 @@ Resources:
           echo "docker container wordpress is deleted" >> /home/ubuntu/user-data.log
           docker run --name wordpress \
             --network wordpress-net \
-            -e WORDPRESS_DB_HOST=${MySQLPrivateIP}:3306 \
+            -e WORDPRESS_DB_HOST=${MySQLHost}:3306 \
             -e WORDPRESS_DB_NAME=${DBName} \
             -e WORDPRESS_DB_USER=${DBUser} \
             -e WORDPRESS_DB_PASSWORD=${DBPassword} \
@@ -91,5 +96,5 @@ Resources:
 Outputs:
   WordPressURL:
     Description: Access your WordPress site here
-    Value: !Sub http://${DockerInstance.PublicIp}
+    Value: !Sub http://${WordpressInstance.PublicIp}
 

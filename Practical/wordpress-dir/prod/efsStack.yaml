@@ -1,0 +1,75 @@
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  Environment:
+    Type: String
+    Default: demo
+
+Resources:
+  EFSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP, SSH and MySQL
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          CidrIp: !ImportValue
+            Fn::Sub: ${NetworkStackName}-VPCcidr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+  FileSystemResource:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: ENABLED
+      PerformanceMode: generalPurpose
+      ThroughputMode: elastic
+      Encrypted: true
+      LifecyclePolicies:
+        - TransitionToIA: AFTER_30_DAYS
+        - TransitionToPrimaryStorageClass: AFTER_1_ACCESS
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${Environment}-DemoFileSystem
+
+  MountTargetResource1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+
+  MountTargetResource2:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PublicSubnet2ID
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+
+  MountTargetResource3:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystemResource
+      SubnetId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-PublicSubnet3ID
+      SecurityGroups:
+        - !Ref EFSSecurityGroup
+        
+Outputs:
+  StackId:
+    Description: The id of stack
+    Value: !Sub ${AWS::StackName}
+  EFSFileSystemDNS:
+    Description: DNS name to mount EFS
+    Value: !Sub "${FileSystemResource}.efs.${AWS::Region}.amazonaws.com"
+    Export:
+      Name: !Sub "${AWS::StackName}-EFSDNSName"

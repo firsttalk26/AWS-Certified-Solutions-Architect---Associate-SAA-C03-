@@ -1,0 +1,62 @@
+Parameters:
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  BackendStackName:
+    Type: String
+    Default: backendStack
+Resources:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for backend Instances
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+  AppELB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+
+      Subnets:
+        - !ImportValue
+          Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+        - !ImportValue
+          Fn::Sub: ${NetworkStackName}-PublicSubnet2ID
+        - !ImportValue
+          Fn::Sub: ${NetworkStackName}-PublicSubnet3ID
+  AppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Protocol: HTTP
+      Port: 80
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      TargetType: instance
+      Targets:
+        - Id: !ImportValue
+            Fn::Sub: ${BackendStackName}-BackendInstance1ID
+        - Id: !ImportValue
+            Fn::Sub: ${BackendStackName}-BackendInstance2ID
+        - Id: !ImportValue
+            Fn::Sub: ${BackendStackName}-BackendInstance3ID
+      HealthCheckEnabled: true
+  ELBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref AppELB
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AppTargetGroup
+Outputs:
+  StackId:
+    Description: The id of stack
+    Value: !Sub ${AWS::StackName}
+  BackendSecurityGroup:
+    Description: The ID of the InstanceSecurityGroup
+    Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-ELBSecurityGroupID

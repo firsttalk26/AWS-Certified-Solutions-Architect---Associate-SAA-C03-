@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Master stack to launch VPC, EFS, and WordPress stacks
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: prod
+
+Resources:
+
+  networkStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/networkStack.yaml
+      Parameters:
+        Environment: !Ref EnvironmentName
+  efsStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: networkStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/efsStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+        Environment: !Ref EnvironmentName
+
+  rdsStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: networkStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/rdsStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+        Environment: !Ref EnvironmentName
+
+  backendStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - efsStack
+      - rdsStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/backendStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+        MySQLHost: !GetAtt rdsStack.Outputs.RDSInstanceEndpoint
+        EFSFileSystemDNS: !GetAtt efsStack.Outputs.EFSFileSystemDNS
+  elbStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - backendStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/elbStack.yaml
+      Parameters:
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
+        BackendStackName: !GetAtt backendStack.Outputs.StackId
+  SGRuleStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - backendStack
+      - elbStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/SGRuleStack.yaml
+      Parameters:
+        ELBStackName: !GetAtt elbStack.Outputs.StackId
+        BackendStackName: !GetAtt backendStack.Outputs.StackId
+
+

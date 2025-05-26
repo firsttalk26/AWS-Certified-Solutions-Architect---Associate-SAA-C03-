@@ -1,7 +1,7 @@
 Parameters:
   Environment:
     Type: String
-    Default: demo
+    Default: prod
   NetworkStackName:
     Type: String
     Default: networkStack
@@ -20,24 +20,24 @@ Parameters:
     Default: db.t3.micro
   DBSubnet1CiDR:
     Type: String
-    Default: 172.162.4.0/28
+    Default: 172.164.4.0/28
   DBSubnet2CiDR:
     Type: String
-    Default: 172.162.4.16/28
+    Default: 172.164.4.16/28
   DBSubnet3CiDR:
     Type: String
-    Default: 172.162.4.32/28
+    Default: 172.164.4.32/28
     
   DBSubnet4CiDR:
     Type: String
-    Default: 172.162.4.48/28
+    Default: 172.164.4.48/28
   DBSubnet5CiDR:
     Type: String
-    Default: 172.162.4.64/28
+    Default: 172.164.4.64/28
     
   DBSubnet6CiDR:
     Type: String
-    Default: 172.162.4.80/28
+    Default: 172.164.4.80/28
   DBAvailabilityZone:
      Type: String
      Default: us-east-1a
@@ -166,6 +166,9 @@ Resources:
       DeletionProtection: false
 
 Outputs:
+  StackId:
+    Description: The id of stack
+    Value: !Sub ${AWS::StackName}
   RDSInstanceEndpoint:
     Description: MySQL RDS Endpoint
     Value: !GetAtt MySQLInstance.Endpoint.Address

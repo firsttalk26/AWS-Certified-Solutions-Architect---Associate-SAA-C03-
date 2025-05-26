@@ -1,0 +1,38 @@
+Parameters:
+  BackendStackName:
+    Type: String
+    Default: backendStack
+  ELBStackName:
+    Type: String
+    Default: elbStack
+
+Resources:
+  AddIngressRule1:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !ImportValue
+        Fn::Sub: ${BackendStackName}-BackendSecurityGroupID
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !ImportValue
+        Fn::Sub: ${ELBStackName}-ELBSecurityGroupID
+  AddIngressRule2:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !ImportValue
+        Fn::Sub: ${ELBStackName}-ELBSecurityGroupID
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !ImportValue
+        Fn::Sub: ${BackendStackName}-BackendSecurityGroupID
+  AddIngressRule3:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !ImportValue
+        Fn::Sub: ${ELBStackName}-ELBSecurityGroupID
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
