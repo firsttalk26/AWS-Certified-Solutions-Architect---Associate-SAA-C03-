@@ -126,6 +126,9 @@ Resources:
         - !Ref DBSubnet4
         - !Ref DBSubnet5
         - !Ref DBSubnet6
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-DBSubnetGroup
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -141,6 +144,9 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-DB-SG
 
   MySQLInstance:
     Type: AWS::RDS::DBInstance

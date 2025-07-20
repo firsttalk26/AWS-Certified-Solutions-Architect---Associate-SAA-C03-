@@ -1,0 +1,113 @@
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+  NetworkStackName:
+    Type: String
+    Default: networkStack
+  InstanceAMI:
+    Type: String
+    Default: ami-084568db4383264d4
+  SSHKeyName:
+    Type: String
+    Default: demo-ssh-key
+
+
+Resources:
+  BastionElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-Bastion-EIP
+
+  BastionEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt BastionElasticIP.AllocationId
+      InstanceId: !Ref BastionInstance
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP and SSH access
+      VpcId: !ImportValue
+        Fn::Sub: ${NetworkStackName}-VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-Bastion-SG
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 81
+          ToPort: 81
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+
+  EC2InstanceLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: !Ref InstanceAMI
+        InstanceType: t2.micro
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeSize: 22
+              VolumeType: gp2
+              DeleteOnTermination: true
+              Encrypted: true
+        MetadataOptions:
+          InstanceMetadataTags: enabled
+        NetworkInterfaces:
+          - DeviceIndex: 0
+            SubnetId: !ImportValue
+              Fn::Sub: ${NetworkStackName}-PublicSubnet1ID
+            AssociatePublicIpAddress: true
+            Groups:
+              - !Ref InstanceSecurityGroup
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Environment
+                Value: !Sub ${Environment}
+      LaunchTemplateName: !Sub ${Environment}-Bastion-Instance-Template
+      TagSpecifications:
+        - ResourceType: launch-template
+          Tags:
+            - Key: Environment
+              Value: !Sub ${Environment}
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
+        Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
+      KeyName: !Ref SSHKeyName
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-BastionVM
+
+Outputs:
+  StackBastion:
+    Description: Public IP of the Bastion VM
+    Value: !Sub ${BastionInstance.PublicIp}
+  StackId:
+    Description: The id of stack
+    Value: !Sub ${AWS::StackName}
+  BastionSecurityGroup:
+    Description: The ID of the InstanceSecurityGroup
+    Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-BastionSecurityGroupID

@@ -5,6 +5,9 @@ Parameters:
   ELBStackName:
     Type: String
     Default: elbStack
+  BastionStackName:
+    Type: String
+    Default: bastionStack
 
 Resources:
   AddIngressRule1:
@@ -36,3 +39,14 @@ Resources:
       FromPort: 80
       ToPort: 80
       CidrIp: 0.0.0.0/0
+      
+  AddIngressRule4:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !ImportValue
+        Fn::Sub: ${BackendStackName}-BackendSecurityGroupID
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !ImportValue
+        Fn::Sub: ${BastionStackName}-BastionSecurityGroupID

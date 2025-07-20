@@ -1,8 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: VPC with 3 public and 3 private subnets, NAT and IGW
 
-
-
 Parameters:
   CidrBlock:
     Type: String
@@ -19,18 +17,17 @@ Parameters:
   PublicSubnet3CiDR:
     Type: String
     Default: 172.164.3.0/24
-    
+
   PrivateSubnet1CiDR:
     Type: String
     Default: 172.164.11.0/24
   PrivateSubnet2CiDR:
     Type: String
     Default: 172.164.12.0/24
-    
+
   PrivateSubnet3CiDR:
     Type: String
     Default: 172.164.13.0/24
-
 
 Resources:
   VPC:
@@ -161,6 +158,9 @@ Resources:
     DependsOn: IGWAttachment
     Properties:
       Domain: vpc
+      Tags:
+      - Key: Name
+        Value: !Sub ${Environment}-NAT-EIP
 
   NATGateway:
     Type: AWS::EC2::NatGateway
@@ -170,7 +170,7 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       Tags:
         - Key: Name
-          Value: !Sub ${Environment}-demo-nat
+          Value: !Sub ${Environment}-NG
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable

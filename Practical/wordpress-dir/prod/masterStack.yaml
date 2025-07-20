@@ -5,6 +5,9 @@ Parameters:
   EnvironmentName:
     Type: String
     Default: prod
+  BucketName: 
+    Type: String
+    Default: cloud-formation-stack-demo
 
 Resources:
 
@@ -50,6 +53,7 @@ Resources:
     Properties:
       TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/elbStack.yaml
       Parameters:
+        Environment: !Ref EnvironmentName
         NetworkStackName: !GetAtt networkStack.Outputs.StackId
         BackendStackName: !GetAtt backendStack.Outputs.StackId
   SGRuleStack:
@@ -57,10 +61,21 @@ Resources:
     DependsOn:
       - backendStack
       - elbStack
+      - bastionStack
     Properties:
       TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/SGRuleStack.yaml
       Parameters:
         ELBStackName: !GetAtt elbStack.Outputs.StackId
         BackendStackName: !GetAtt backendStack.Outputs.StackId
+        BastionStackName: !GetAtt bastionStack.Outputs.StackId
+  bastionStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - networkStack
+    Properties:
+      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/prod/bastionStack.yaml
+      Parameters:
+        Environment: !Ref EnvironmentName
+        NetworkStackName: !GetAtt networkStack.Outputs.StackId
 
 

@@ -1,4 +1,7 @@
 Parameters:
+  Environment:
+    Type: String
+    Default: prod
   NetworkStackName:
     Type: String
     Default: networkStack
@@ -12,6 +15,9 @@ Resources:
       GroupDescription: SG for backend Instances
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-LB-SG
   AppELB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -26,9 +32,23 @@ Resources:
           Fn::Sub: ${NetworkStackName}-PublicSubnet2ID
         - !ImportValue
           Fn::Sub: ${NetworkStackName}-PublicSubnet3ID
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-ALB
   AppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      IpAddressType: ipv4
+      Matcher: 
+        HttpCode: "200,302"
+      UnhealthyThresholdCount: 2
       Protocol: HTTP
       Port: 80
       VpcId: !ImportValue
@@ -41,7 +61,10 @@ Resources:
             Fn::Sub: ${BackendStackName}-BackendInstance2ID
         - Id: !ImportValue
             Fn::Sub: ${BackendStackName}-BackendInstance3ID
-      HealthCheckEnabled: true
+      Tags: 
+      - Key: Name
+        Value: !Sub ${Environment}-Backend-TG
+
   ELBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -51,6 +74,9 @@ Resources:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref AppTargetGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-LB-Listener
 Outputs:
   StackId:
     Description: The id of stack

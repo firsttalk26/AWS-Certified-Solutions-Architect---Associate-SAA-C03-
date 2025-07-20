@@ -7,6 +7,12 @@ Parameters:
     Default: networkStack
   EFSFileSystemDNS:
     Type: String
+  InstanceAMI:
+    Type: String
+    Default: ami-084568db4383264d4
+  SSHKeyName:
+    Type: String
+    Default: demo-ssh-key
   DBName:
     Type: String
     Default: wordpress
@@ -28,12 +34,15 @@ Resources:
       GroupDescription: SG for backend Instance
       VpcId: !ImportValue
         Fn::Sub: ${NetworkStackName}-VPCID
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-Backend-SG
 
   EC2InstanceLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        ImageId: ami-07de5dda07dd28430
+        ImageId: !Ref InstanceAMI
         InstanceType: t2.micro
         BlockDeviceMappings:
           - Ebs:
@@ -47,14 +56,14 @@ Resources:
         TagSpecifications:
           - ResourceType: instance
             Tags:
-              - Key: department
-                Value: dev
-      LaunchTemplateName: Backend-Instance-Template
+              - Key: Name
+                Value: !Sub ${Environment}-Template
+      LaunchTemplateName: !Sub ${Environment}-Backend-Instance-Template
       TagSpecifications:
         - ResourceType: launch-template
           Tags:
             - Key: Stack
-              Value: demo
+              Value: !Sub ${Environment}
 
   BackendInstance1:
     Type: AWS::EC2::Instance
@@ -62,7 +71,7 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
         Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
-      KeyName: demo-ssh-key
+      KeyName: !Ref SSHKeyName
       SubnetId: !ImportValue
         Fn::Sub: ${NetworkStackName}-PrivateSubnet1ID
       SecurityGroupIds:
@@ -97,7 +106,7 @@ Resources:
             echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
       Tags:
         - Key: Name
-          Value: BackendInstance1
+          Value: !Sub ${Environment}-BackendInstance1
 
   BackendInstance2:
     Type: AWS::EC2::Instance
@@ -105,7 +114,7 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
         Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
-      KeyName: demo-ssh-key
+      KeyName: !Ref SSHKeyName
       SubnetId: !ImportValue
         Fn::Sub: ${NetworkStackName}-PrivateSubnet2ID
       SecurityGroupIds:
@@ -140,7 +149,7 @@ Resources:
             echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
       Tags:
         - Key: Name
-          Value: BackendInstance2
+          Value: !Sub ${Environment}-BackendInstance2
 
   BackendInstance3:
     Type: AWS::EC2::Instance
@@ -148,7 +157,7 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref EC2InstanceLaunchTemplate
         Version: !GetAtt EC2InstanceLaunchTemplate.LatestVersionNumber
-      KeyName: demo-ssh-key
+      KeyName: !Ref SSHKeyName
       SubnetId: !ImportValue
         Fn::Sub: ${NetworkStackName}-PrivateSubnet3ID
       SecurityGroupIds:
@@ -183,7 +192,7 @@ Resources:
             echo "docker container is started at `date`" >> /home/ubuntu/user-data.log
       Tags:
         - Key: Name
-          Value: BackendInstance3
+          Value: !Sub ${Environment}-BackendInstance3
 
 Outputs:
   StackId:

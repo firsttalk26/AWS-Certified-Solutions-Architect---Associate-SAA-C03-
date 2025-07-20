@@ -22,6 +22,9 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${Environment}-EFS-SG
   FileSystemResource:
     Type: AWS::EFS::FileSystem
     Properties:
@@ -35,7 +38,7 @@ Resources:
         - TransitionToPrimaryStorageClass: AFTER_1_ACCESS
       FileSystemTags:
         - Key: Name
-          Value: !Sub ${Environment}-DemoFileSystem
+          Value: !Sub ${Environment}-FileSystem
 
   MountTargetResource1:
     Type: AWS::EFS::MountTarget

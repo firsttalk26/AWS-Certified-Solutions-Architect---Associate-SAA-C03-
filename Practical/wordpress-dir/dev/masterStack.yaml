@@ -5,6 +5,9 @@ Parameters:
   EnvironmentName:
     Type: String
     Default: demo
+  BucketName: 
+    Tyep: String
+    Default: cloud-formation-stack-dem
   MySQLPrivateIP:
     Type: String
     Default: 10.0.1.10
@@ -14,14 +17,14 @@ Resources:
   networkStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/networkStack.yaml
+      TemplateURL: https://cloud-formation-stack-dem.s3.us-east-1.amazonaws.com/dev/networkStack.yaml
       Parameters:
         Environment: !Ref EnvironmentName
   efsStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: networkStack
     Properties:
-      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/efsStack.yaml
+      TemplateURL: https://cloud-formation-stack-dem.s3.us-east-1.amazonaws.com/dev/efsStack.yaml
       Parameters:
         NetworkStackName: !GetAtt networkStack.Outputs.StackId
         Environment: !Ref EnvironmentName
@@ -30,7 +33,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn: networkStack
     Properties:
-      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/rdsStack.yaml
+      TemplateURL: https://cloud-formation-stack-dem.s3.us-east-1.amazonaws.com/dev/rdsStack.yaml
       Parameters:
         NetworkStackName: !GetAtt networkStack.Outputs.StackId
         Environment: !Ref EnvironmentName
@@ -41,7 +44,7 @@ Resources:
       - efsStack
       - rdsStack
     Properties:
-      TemplateURL: https://cloud-formation-stack-demo.s3.us-east-1.amazonaws.com/dev/wpStack.yaml
+      TemplateURL: https://cloud-formation-stack-dem.s3.us-east-1.amazonaws.com/dev/wpStack.yaml
       Parameters:
         NetworkStackName: !GetAtt networkStack.Outputs.StackId
         MySQLHost: !GetAtt rdsStack.Outputs.RDSInstanceEndpoint
